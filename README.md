@@ -1,6 +1,8 @@
 # DuckTronRepo
 This is a repo for the DuckTron project
 
+CHECK OUT OUR AWESOME DUCK!!
+
 
                                                                                 
                                                                                 
