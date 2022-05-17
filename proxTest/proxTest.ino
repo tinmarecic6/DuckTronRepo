@@ -19,7 +19,8 @@ int topLeftResVal;
 int bottomRightResVal;
 int bottomLeftResVal;
 int maxRotation;
-Servo myservo; 
+int photoOffset = 3;
+Servo myservo;
 
 
 
@@ -58,17 +59,56 @@ void setup() {
     digitalWrite(stepPin,LOW);
     delay(5);
     Serial.println(debug);
-    delay(10);  
+    delay(10);
   }
   Serial.println("Calibration done, waiting 5 seconds before starting");
   delay(5000);
+  digitalWrite(dirPin, LOW);
+  for (int x = 0; x < stepsPerRevolution; x++) {
+    //stepPos += 1;
+    digitalWrite(stepPin, HIGH);
+    delay(5);
+    digitalWrite(stepPin, LOW);
+    delay(5);
+  }
 }
 
 void loop() {
-  //Tins awesome decision code
+  // put your main code here, to run repeatedly:
+  int val = digitalRead(proximitySensorPin);
 
-  
-  delay(1000);
+  topRightResVal = analogRead(pRTopRightPin);
+  topLeftResVal = analogRead(pRTopLeftPin);
+  bottomRightResVal = analogRead(pRBottomRightPin);
+  bottomLeftResVal = analogRead(pRBottomLeftPin);
+  Serial.println("\n----------");
+  Serial.print("Top right:");
+  Serial.println(topRightResVal);
+  Serial.print("Top left:");
+  Serial.println(topLeftResVal);
+  Serial.print("Bottom right:");
+  Serial.println(bottomRightResVal);
+  Serial.print("Bottom left:");
+  Serial.println(bottomLeftResVal);
+  if (topLeftResVal > (topRightResVal + photoOffset) || bottomLeftResVal > (bottomRightResVal + photoOffset)) {
+    //move to the left
+    Serial.println("Moving to the left");
+  }
+  if (topLeftResVal > (topRightResVal + photoOffset) || bottomLeftResVal > (bottomRightResVal + photoOffset)) {
+    //move to the right
+    Serial.println("Moving to the right");
+  }
+  if (topLeftResVal > (bottomLeftResVal + photoOffset) || topRightResVal > (topRightResVal + photoOffset)) {
+    //move up
+    Serial.println("Moving up");
+  }
+  if (bottomLeftResVal > (topLeftResVal + photoOffset) || bottomRightResVal > (topRightResVal + photoOffset)) {
+    //move down
+    Serial.println("Moving down");
+  }
+
+
+  delay(5000);
 }
 
 void left() {
