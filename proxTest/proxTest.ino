@@ -19,10 +19,14 @@ int bottomRightResVal;
 int bottomLeftResVal;
 int photoOffset = 3;
 Servo myservo;
+int servoStepSize = 1;
+int servoMaxPos = 45;
+int servoCurPos = 0;
 
 
 
 void setup() {
+  myservo.attach(9);
   Serial.begin(9600);
   pinMode(proximitySensorPin, INPUT); 
   pinMode(dirPin, OUTPUT); 
@@ -45,13 +49,13 @@ void setup() {
     while(digitalRead(proximitySensorPin) == 0){
       digitalWrite(stepPin,HIGH);
       delay(5);
-      digitalWrite(stepPin,LOW);
+      digitalWrite(stepPin, LOW);
       delay(5);
     }
-    for(int x = 0; x < 10; x++){ // move it 10 steps further to make sure its away from the sensor
-      digitalWrite(stepPin,HIGH);
+    for (int x = 0; x < 10; x++) { // move it 10 steps further to make sure its away from the sensor
+      digitalWrite(stepPin, HIGH);
       delay(5);
-      digitalWrite(stepPin,LOW);
+      digitalWrite(stepPin, LOW);
       delay(5);
     } // continue as if it never touched the sensor during setup
   }
@@ -92,7 +96,7 @@ void loop() {
     Serial.println("Moving up");
   }else if (bottomLeftResVal > (topLeftResVal + photoOffset) || bottomRightResVal > (topRightResVal + photoOffset)) {
     //move down
-    Serial.println("Moving down");
+    moveDown();
   }
 
   right(10);
@@ -153,5 +157,26 @@ void right(int steps) {
       delay(5);
     }
     stepsPos = maxRotation;
+  }
+}
+
+void moveUp() {
+  if (servoCurPos + servoStepSize >= servoMaxPos) {
+    Serial.println("Currently at max pos, not moving up");
+  }
+  else {
+    Serial.println("Moving up");
+    servoCurPos += servoStepSize ;
+    myservo.write(servoCurPos);
+  }
+}
+void moveDown() {
+  if (servoCurPos - servoStepSize >= 0) {
+    Serial.println("Currently at 0 pos, not moving down");
+  }
+  else {
+    Serial.println("Moving down");
+    servoCurPos -= servoStepSize ;
+    myservo.write(servoCurPos);
   }
 }
