@@ -26,14 +26,16 @@ int servoCurPos = 0;
 
 
 void setup() {
-  myservo.attach(9);
+  myservo.attach(4);
+  myservo.write(0);
   Serial.begin(9600);
   pinMode(proximitySensorPin, INPUT); 
   pinMode(dirPin, OUTPUT); 
   pinMode(stepPin,OUTPUT);
   digitalWrite(dirPin,HIGH);
   Serial.println("Moving 50 steps to make sure the startup havent moved the motor too far");
-  for(int x = 0; x < 50; x++){
+  for(int x = 0; x < 120; x++){
+      myservo.write(0);
       digitalWrite(dirPin,HIGH);// HIGH = left (counterclockwise), LOW = right (clockwise) with black towards power of the motor
       digitalWrite(stepPin,HIGH);
       delay(5);
@@ -59,7 +61,7 @@ void setup() {
       delay(5);
     } // continue as if it never touched the sensor during setup
   }
-  Serial.println("Touched before moving, correting position done");
+  Serial.println("Checked if Touched done");
   delay(2000);
   resetTo0();
   Serial.println("Calibration done, waiting 5 seconds before starting");
@@ -74,32 +76,29 @@ void loop() {
   topLeftResVal = analogRead(pRTopLeftPin);
   bottomRightResVal = analogRead(pRBottomRightPin);
   bottomLeftResVal = analogRead(pRBottomLeftPin);
-  //Serial.println("\n----------");
-  //Serial.print("Top right:");
-  //Serial.println(topRightResVal);
-  //Serial.print("Top left:");
-  //Serial.println(topLeftResVal);
-  //Serial.print("Bottom right:");
-  //Serial.println(bottomRightResVal);
-  //Serial.print("Bottom left:");
-  //Serial.println(bottomLeftResVal);
+  Serial.println("\n----------");
+  Serial.print("Top right:");
+  Serial.println(topRightResVal);
+  Serial.print("Top left:");
+  Serial.println(topLeftResVal);
+  Serial.print("Bottom right:");
+  Serial.println(bottomRightResVal);
+  Serial.print("Bottom left:");
+  Serial.println(bottomLeftResVal);
   if (topLeftResVal > (topRightResVal + photoOffset) || bottomLeftResVal > (bottomRightResVal + photoOffset)) {
     //move to the left
-    Serial.println("Moving to the left");
-    //left(5);
-  }else if (topLeftResVal > (topRightResVal + photoOffset) || bottomLeftResVal > (bottomRightResVal + photoOffset)) {
+    left(5);
+  }else if (topRightResVal > (topLeftResVal + photoOffset) || bottomRightResVal > (bottomLeftResVal + photoOffset)) {
     //move to the right
-    Serial.println("Moving to the right");
-    //right(5);
-  }else if (topLeftResVal > (bottomLeftResVal + photoOffset) || topRightResVal > (topRightResVal + photoOffset)) {
+    right(5);
+  }
+  if (topLeftResVal > (bottomLeftResVal + photoOffset) || topRightResVal > (bottomRightResVal + photoOffset)) {
     //move up
-    Serial.println("Moving up");
+    moveUp();
   }else if (bottomLeftResVal > (topLeftResVal + photoOffset) || bottomRightResVal > (topRightResVal + photoOffset)) {
     //move down
     moveDown();
   }
-
-  right(10);
   delay(500);
 }
 
@@ -107,12 +106,15 @@ void resetTo0(){
   Serial.println("Resetting to 0 position");
   digitalWrite(dirPin,LOW);
   while(digitalRead(proximitySensorPin) != 0){
+    Serial.println("Not touched");
     digitalWrite(stepPin,HIGH);
     delay(5);
     digitalWrite(stepPin,LOW);
     delay(5);
   }
-  for(int x = 0; x < 100; x++){ //move another 50 steps past the sensor
+  Serial.println("Moving another 100 steps");
+  delay(1000);
+  for(int x = 0; x < 100; x++){ //move another 100 steps past the sensor
       digitalWrite(stepPin,HIGH);
       delay(5);
       digitalWrite(stepPin,LOW);
@@ -122,6 +124,7 @@ void resetTo0(){
 }
 
 void left(int steps) {
+  Serial.println("Moving to the left");
   if (stepsPos+steps < maxRotation){//no problem, move as normal
     digitalWrite(dirPin,HIGH); // HIGH = left (counterclockwise), LOW = right (clockwise) with black towards power of the motor
     for(int x = 0; x < steps; x++){
@@ -138,6 +141,7 @@ void left(int steps) {
 }
 
 void right(int steps) {
+  Serial.println("Moving to the right");
   if (stepsPos-steps > 0){//no problem, move as normal
     digitalWrite(dirPin,LOW); // HIGH = left (counterclockwise), LOW = right (clockwise) with black towards power of the motor
     for(int x = 0; x < steps; x++){
@@ -162,7 +166,15 @@ void right(int steps) {
 
 void moveUp() {
   if (servoCurPos + servoStepSize >= servoMaxPos) {
-    Serial.println("Currently at max pos, not moving up");
+    Serial.println("Currently at max pos, not moving up, turning around instead");
+    delay(2000);
+    if (stepsPos+(maxRotation/2) <= maxRotation){
+      left(maxRotation/2);
+    }else if (stepsPos-(maxRotation/2) >= 0){
+      right(maxRotation/2);
+    }else{
+      Serial.println("Should never happen");
+    }
   }
   else {
     Serial.println("Moving up");
@@ -171,7 +183,7 @@ void moveUp() {
   }
 }
 void moveDown() {
-  if (servoCurPos - servoStepSize >= 0) {
+  if (servoCurPos - servoStepSize <= 0) {
     Serial.println("Currently at 0 pos, not moving down");
   }
   else {
